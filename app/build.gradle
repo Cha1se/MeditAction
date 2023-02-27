@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -50,5 +51,12 @@ dependencies {
     implementation 'jp.wasabeef:glide-transformations:4.3.0'
     // If you want to use the GPU Filters
     implementation 'jp.co.cyberagent.android:gpuimage:2.1.0'
+
+    def room_version = "2.3.0"
+
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
 
 }

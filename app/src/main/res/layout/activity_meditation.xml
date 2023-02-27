@@ -28,6 +28,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/itimcyrillic"
+        android:shadowDy="0"
         android:text="12:52"
         android:textColor="#FFFFFF"
         android:textSize="34sp"
@@ -46,20 +47,67 @@
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ico_arrow" />
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/musicContainer"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:background="@drawable/xml_music_bar_corners"
+        android:backgroundTint="#7E000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/musicText"
+            android:layout_width="250dp"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/kumbh_sans_regular"
+            android:letterSpacing="0.1"
+            android:text="Games - Tessa Voilet"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/nextTrack"
+            android:layout_width="28dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:paddingHorizontal="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/musicText"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ico_next" />
+
+        <ImageView
+            android:id="@+id/backTrack"
+            android:layout_width="28dp"
+            android:layout_height="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingHorizontal="5dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/musicText"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ico_back" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <TextView
         android:id="@+id/titileMeditationText"
-        android:layout_width="180dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/xml_select_nav_menu"
-        android:backgroundTint="#52FFFFFF"
+        android:layout_marginBottom="32dp"
         android:fontFamily="@font/kumbh_sans_regular"
         android:padding="10dp"
         android:text="Relax"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/progressBar"
+        app:layout_constraintEnd_toEndOf="@+id/progressBar"
+        app:layout_constraintStart_toStartOf="@+id/progressBar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

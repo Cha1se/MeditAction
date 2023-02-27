@@ -69,8 +69,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun DefaultCards() {
-        // Create Sample Cards
 
+        // Create Sample Cards
         CreateCard(R.drawable.img_sample_background_card, "Relax", "00:15:00")
         CreateCard(R.drawable.img_sleep_sample_card, "Sleep", "00:10:00")
         CreateCard(R.drawable.img_stress_sample_card, "Stress", "00:20:00")
@@ -87,7 +87,6 @@ class MainActivity : AppCompatActivity() {
         if (lastLayout.childCount < 2) { // Если в последнем LinearLayout еще есть место для карточки то
 
             // Create Card
-
             var sampleCard = ConstraintLayout(this)
 
             sampleCard.id = ConstraintLayout.generateViewId()
