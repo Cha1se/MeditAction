@@ -1,13 +1,17 @@
 package com.example.myapplication3457
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 
+
 @Dao
 interface CardDAO {
+
+    // Get
 
     @Query("SELECT * FROM Card")
     fun getCards(): List<Card>
@@ -18,6 +22,9 @@ interface CardDAO {
     @Query("SELECT * FROM Statistic")
     fun getStats(): List<Statistic>
 
+
+    // Insert
+
     @Insert
     fun insertCard(card: Card)
 
@@ -25,24 +32,34 @@ interface CardDAO {
     fun insertMusic(music: Music)
 
     @Insert
-    fun insertCounter(statistic: Statistic)
+    fun insertStatistic(statistic: Statistic)
 
-    @Insert
-    fun insertStreak(statistic: Statistic)
 
-    @Update
-    fun updateCardName(cardName: Card)
+    // Update
 
     @Update
-    fun updateBackground(background: Card)
+    fun updateCard(card: Card)
 
     @Update
     fun updateMusic(music: Music)
 
     @Update
-    fun updateCounter(statistic: Statistic)
+    fun updateStatistic(statistic: Statistic)
 
-    @Update
-    fun updateStreak(statistic: Statistic)
+
+    // Delete
+
+    @Delete
+    fun deleteCard(card: Card)
+
+    @Delete
+    fun deleteMusic(music: Music)
+
+    @Delete
+    fun deleteStatistic(statistic: Statistic)
+
+
+    @Query("DELETE FROM Card")
+    fun deleteAllCards()
 
 }
