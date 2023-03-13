@@ -25,7 +25,7 @@ data class Music(
 data class Statistic(
     @PrimaryKey(autoGenerate = true)
     val id: Int,
-    val counter: Long = 0L,
-    val streak: Int = 0,
+    val counter: Long,
+    val streak: Int,
     val lastDayOfUse: String
 )

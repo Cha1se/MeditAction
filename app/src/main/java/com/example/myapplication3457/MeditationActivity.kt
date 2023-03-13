@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
@@ -74,6 +75,7 @@ class MeditationActivity : AppCompatActivity() {
         var img: Int? = null
         var name: String? = null
         var timer: String? = null
+        var uriImg: String? = null
         lateinit var cards: List<Card>
 
         Observable.fromCallable {
@@ -95,6 +97,7 @@ class MeditationActivity : AppCompatActivity() {
                 for (card in cards) {
 
                     if (idCard == card.id) {
+
                         img = application.resources.getIdentifier(
                             card.background,
                             "drawable",
@@ -112,8 +115,10 @@ class MeditationActivity : AppCompatActivity() {
 //                        contentLay.setBackgroundResource(img!!)
 
                         // CenterCrop for background
+
                         Glide.with(this).load(img!!)
                             .transform(CenterCrop())
+                            .error(Uri.parse(card.background))
                             .into(object :
                                 CustomTarget<Drawable>() {
                                 override fun onLoadCleared(placeholder: Drawable?) {
@@ -127,6 +132,7 @@ class MeditationActivity : AppCompatActivity() {
                                 }
 
                             })
+
                         titleText.text = name.toString()
                     }
 

@@ -30,7 +30,6 @@ abstract class AppDatabase: RoomDatabase() {
 
                             Observable.fromCallable {
 
-                                // main
                                 var db = AppDatabase.getAppDatabase(context)
 
                                 var cardDao = db!!.cardDao()
