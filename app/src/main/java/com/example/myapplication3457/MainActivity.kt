@@ -1,43 +1,41 @@
 package com.example.myapplication3457
 
-import android.app.TimePickerDialog
+import android.app.Dialog
 import android.content.Intent
 import android.content.res.Resources
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.os.Environment
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
+import android.view.Window
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.view.iterator
 import androidx.core.view.setPadding
+import androidx.fragment.app.FragmentContainerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.request.RequestOptions
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import jp.wasabeef.glide.transformations.RoundedCornersTransformation
-import java.io.File
-import java.io.FileDescriptor
-import java.io.FileOutputStream
-import java.io.IOException
 import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.Period
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 
@@ -52,25 +50,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editCardImg: ImageView
     private lateinit var countTimer: TextView
     private lateinit var streakText: TextView
-    private lateinit var createCardLay: ConstraintLayout
     private lateinit var scrollView: ScrollView
-
-    private lateinit var backButton: ImageView
-    private lateinit var cardNameEdit: EditText
-    private lateinit var chooseBackCard: ConstraintLayout
-    private lateinit var chooseBackCardImg: ImageView
-    private lateinit var showCardLayout: ConstraintLayout
-    private lateinit var showCardImg: ImageView
-    private lateinit var nameCardText: TextView
-    private lateinit var timerTextChange: TextView
-    private lateinit var changeTimerButton: Button
-    private lateinit var saveButton: Button
     private lateinit var musicLay: ConstraintLayout
+    private lateinit var aboutBtn: ImageView
 
-    private var uriImage: String = ""
+    private lateinit var fragmentCreateCard: FragmentContainerView
+
     private lateinit var cardDao: CardDAO
-    private lateinit var selectImageIntent: ActivityResultLauncher<String>
-    
+
     private var widthScreen: Int = 0
     private var heightScreen: Int = 0
 
@@ -95,62 +82,50 @@ class MainActivity : AppCompatActivity() {
         editCardImg = findViewById(R.id.editCardImg)
         countTimer = findViewById(R.id.counterText)
         streakText = findViewById(R.id.streakText)
-        createCardLay = findViewById(R.id.createCardLayout)
         scrollView = findViewById(R.id.scrollView)
-
-        // Create card views
-        backButton = findViewById(R.id.backBtn)
-        cardNameEdit = findViewById(R.id.cardNameEdit)
-        chooseBackCard = findViewById(R.id.chooseBackCard)
-        chooseBackCardImg = findViewById(R.id.chooseBackCardImg)
-        showCardLayout = findViewById(R.id.showCardLayout)
-        showCardImg = findViewById(R.id.showCardImg)
-        nameCardText = findViewById(R.id.nameCardText)
-        timerTextChange = findViewById(R.id.timerTextChange)
-        changeTimerButton = findViewById(R.id.changeTimerButton)
-        saveButton = findViewById(R.id.saveButton)
         musicLay = findViewById(R.id.musicLayout)
+        aboutBtn = findViewById(R.id.about_button)
+        fragmentCreateCard = findViewById(R.id.fragmentCreateCard)
 
-        editCardLay.setOnClickListener{
+        editCardLay.setOnClickListener {
             addCard()
             // add scroll to down
             scrollView.postDelayed({
                 scrollView.smoothScrollTo(0, scrollView.height)
             }, 200)
+        }
+
+        musicLay.setOnClickListener {
+            supportFragmentManager.beginTransaction()
+                .setCustomAnimations(
+                    androidx.appcompat.R.anim.abc_slide_in_bottom,
+                    androidx.appcompat.R.anim.abc_slide_out_bottom
+                )
+                .replace(R.id.fragmentCreateCard, MusicListFragment())
+                .commit()
+        }
+
+        aboutBtn.setOnClickListener {
+
+            val dialog = Dialog(this)
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+            dialog.setContentView(R.layout.fragment_about)
+            dialog.setTitle("About")
+
+            dialog.show()
 
         }
 
         changeWelcomeText()
-
         showCards()
-
         showCounterSession()
-
-        selectImageIntent = registerForActivityResult(ActivityResultContracts.GetContent())
-        { uri ->
-            chooseBackCardImg.setPadding(0)
-            showCardImg.setPadding(0)
-
-            val multi = MultiTransformation(
-                CenterCrop(),
-                RoundedCornersTransformation(15.dpToPx, 0, RoundedCornersTransformation.CornerType.ALL)
-            )
-            Glide.with(this).load(uri)
-                .apply(RequestOptions.bitmapTransform(multi))
-                .into(chooseBackCardImg)
-
-            Glide.with(this).load(uri)
-                .apply(RequestOptions.bitmapTransform(multi))
-                .into(showCardImg)
-            uriImage = uri.toString()
-
-        }
-
     }
 
     private fun changeWelcomeText() {
-        val dateFormat = SimpleDateFormat("HH") // Утро - 06-12, день - 12-18, вечер - 18-00, ночь - 00-06
+        val dateFormat =
+            SimpleDateFormat("HH") // Утро - 06-12, день - 12-18, вечер - 18-00, ночь - 00-06
         val date = dateFormat.format(Date())
+
         if (date.toString().toInt() in 6..12) {
             helloText.text = "Good morning!"
         } else if (date.toString().toInt() in 12..18) {
@@ -182,7 +157,12 @@ class MainActivity : AppCompatActivity() {
             stats = cardDao.getStats().last()
 
             if (stats.lastDayOfUse == "none") {
-                cardDao.updateStatistic(stats.copy(lastDayOfUse = LocalDate.now().format(DateTimeFormatter.ofPattern("ddMMyyyy")).toString()))
+                cardDao.updateStatistic(
+                    stats.copy(
+                        lastDayOfUse = LocalDate.now()
+                            .format(DateTimeFormatter.ofPattern("ddMMyyyy")).toString()
+                    )
+                )
 
                 stats = cardDao.getStats().last()
             }
@@ -194,9 +174,12 @@ class MainActivity : AppCompatActivity() {
             val period = Period.between(from, today)
             // and print it in a human-readable way
 
-            if (period.days > 1 && period.months >= 0 && period.years >= 0) {
+            if (period.days >= 2) {
                 cardDao.updateStatistic(stats.copy(streak = 0))
+                Log.e("TAG", "MeditActivity - Period is big")
+                Log.e("TAG", "Streak - ${stats.streak}")
             }
+            Log.e("TAG", "Streak - ${stats.streak}")
 
         }.doOnError { Log.e("ERROR", it.message.toString()) }
             .subscribeOn(Schedulers.io())
@@ -250,6 +233,9 @@ class MainActivity : AppCompatActivity() {
             // put values in database
 
             cards = cardDao.getCards()
+//            while (cards.size < 4) {
+//                cards = cardDao.getCards()
+//            }
 
         }.doOnError { Log.e("ERROR", it.message.toString()) }
             .subscribeOn(Schedulers.io())
@@ -265,71 +251,21 @@ class MainActivity : AppCompatActivity() {
                     )
                     name = card.cardName
                     timer = card.timer
-                    createCard(id = id!!, cardImg = img!!, titleText = name!!, timer = timer!!, cardImgUri = card.background)
+                    createCard(
+                        id = id!!,
+                        cardImg = img!!,
+                        titleText = name!!,
+                        timer = timer!!,
+                        cardImgUri = card.background
+                    )
                 }
 
             }
             .subscribe()
     }
 
-    private fun defaultValuesDB() {
-
-        // Create Sample Cards
-
-        Observable.fromCallable {
-
-            // main
-            val db = AppDatabase.getAppDatabase(applicationContext)
-
-            cardDao = db!!.cardDao()
-
-            cardDao.insertStatistic(Statistic(id = 0, counter = 0, streak = 0, lastDayOfUse = "04032023"))
-
-//            cardDao.deleteAllCards()
-
-            cardDao.insertCard(
-                Card(
-                    id = 0,
-                    background = "img_back_meditation",
-                    cardName = "Relax",
-                    timer = "00:15:00"
-                )
-            )
-
-            cardDao.insertCard(
-                Card(
-                    id = 0,
-                    background = "img_sleep_sample_card",
-                    cardName = "Sleep",
-                    timer = "00:30:00"
-                )
-            )
-
-            cardDao.insertCard(
-                Card(
-                    id = 0,
-                    background = "img_stress_sample_card",
-                    cardName = "Stress",
-                    timer = "00:20:00"
-                )
-            )
-
-            cardDao.insertCard(
-                Card(
-                    id = 0,
-                    background = "img_timer_sample_card",
-                    cardName = "Timer",
-                    timer = "00:20:00"
-                )
-            )
-
-        }.doOnError { Log.e("ERROR", it.message.toString()) }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe()
-    }
-
     private fun addCard() {
+
         val lastLayout: LinearLayout = getViews(scrollLay).last() as LinearLayout
 
         if (!isCheckEditCard) {
@@ -339,19 +275,21 @@ class MainActivity : AppCompatActivity() {
                 .scaleX(0.9f)
                 .alpha(0.5f)
                 .setDuration(100)
-                .withEndAction { Runnable {
+                .withEndAction {
+                    Runnable {
 
-                    editCardLay.setBackgroundResource(R.drawable.xml_card_checked)
-                    editCardText.setTextColor(Color.WHITE)
-                    editCardImg.setImageResource(R.drawable.ico_edit2)
+                        editCardLay.setBackgroundResource(R.drawable.xml_card_checked)
+                        editCardText.setTextColor(Color.WHITE)
+                        editCardImg.setImageResource(R.drawable.ico_edit2)
 
-                    editCardLay.animate()
-                        .scaleY(1f)
-                        .scaleX(1f)
-                        .alpha(1f)
-                        .setDuration(100)
-                        .start()
-                }.run() }
+                        editCardLay.animate()
+                            .scaleY(1f)
+                            .scaleX(1f)
+                            .alpha(1f)
+                            .setDuration(100)
+                            .start()
+                    }.run()
+                }
                 .start()
 
             if (lastLayout.childCount < 2) { // Если в последнем LinearLayout еще есть место для карточки то
@@ -367,39 +305,53 @@ class MainActivity : AppCompatActivity() {
                 (cardsLayout.layoutParams as LinearLayout.LayoutParams).bottomMargin = 16.dpToPx
 
                 // Create Card
-                val addCard = ConstraintLayout(this)
+                val saveCard = ConstraintLayout(this)
 
-                addCard.id = ConstraintLayout.generateViewId()
+                saveCard.id = ConstraintLayout.generateViewId()
 
-                addCard.setBackgroundResource(R.drawable.xml_15_broders_add_card)
+                saveCard.setBackgroundResource(R.drawable.xml_15_broders_add_card)
 
                 // Add Card
-                addCard.alpha = 0f
-                cardsLayout.addView(addCard)
+                saveCard.alpha = 0f
+                cardsLayout.addView(saveCard)
 
-                (addCard.layoutParams as LinearLayout.LayoutParams).height = 130.dpToPx
-                (addCard.layoutParams as LinearLayout.LayoutParams).weight = 1f
-                (addCard.layoutParams as LinearLayout.LayoutParams).leftMargin = 8.dpToPx
-                (addCard.layoutParams as LinearLayout.LayoutParams).rightMargin = 8.dpToPx
-                addCard.setPadding(15.dpToPx)
+                (saveCard.layoutParams as LinearLayout.LayoutParams).height = 130.dpToPx
+                (saveCard.layoutParams as LinearLayout.LayoutParams).weight = 1f
+                (saveCard.layoutParams as LinearLayout.LayoutParams).leftMargin = 8.dpToPx
+                (saveCard.layoutParams as LinearLayout.LayoutParams).rightMargin = 8.dpToPx
+                saveCard.setPadding(15.dpToPx)
                 cardsLayout.requestLayout()
 
                 // OnClick Linstener
-                addCard.setOnClickListener {
+                saveCard.setOnClickListener {
 
-                    addCard.animate()
+                    // Show Fragment
+                    supportFragmentManager.beginTransaction()
+                        .setCustomAnimations(
+                            androidx.appcompat.R.anim.abc_slide_in_bottom,
+                            androidx.appcompat.R.anim.abc_slide_out_bottom
+                        )
+                        .replace(R.id.fragmentCreateCard, CardCreateFragment())
+                        .commit()
+                    intent = Intent(this, CardCreateFragment::class.java)
+                    intent.putExtra("ID", -1)
+
+                    saveCard.animate()
                         .scaleX(0.9f)
                         .scaleY(0.9f)
                         .setDuration(100)
-                        .withEndAction { Runnable {
-                            addCard.animate()
-                                .scaleY(1f)
-                                .scaleX(1f)
-                                .setDuration(100)
-                                .start()
-                        }.run() }
+                        .withEndAction {
+                            Runnable {
+                                saveCard.animate()
+                                    .scaleY(1f)
+                                    .scaleX(1f)
+                                    .setDuration(100)
+                                    .start()
+                            }.run()
+                        }
                         .start()
-                    showcreateCard()
+
+                    editCardLay.callOnClick()
 
                 }
 
@@ -409,22 +361,22 @@ class MainActivity : AppCompatActivity() {
                 backgroundCard.id = ImageView.generateViewId()
                 backgroundCard.setImageResource(R.drawable.ico_add)
 
-                addCard.addView(
+                saveCard.addView(
                     backgroundCard,
                     ConstraintLayout.LayoutParams.MATCH_PARENT,
                     ConstraintLayout.LayoutParams.WRAP_CONTENT
                 )
 
                 if (cardsLayout.childCount == 1) {
-                    addCard.translationX = -150.dpToPx.toFloat()
-                    addCard.animate()
+                    saveCard.translationX = -150.dpToPx.toFloat()
+                    saveCard.animate()
                         .translationX(0f)
                         .alpha(1f)
                         .setDuration(200)
                         .start()
                 } else {
-                    addCard.translationX = 150.dpToPx.toFloat()
-                    addCard.animate()
+                    saveCard.translationX = 150.dpToPx.toFloat()
+                    saveCard.animate()
                         .translationX(0f)
                         .alpha(1f)
                         .setDuration(200)
@@ -433,6 +385,17 @@ class MainActivity : AppCompatActivity() {
 
                 scrollLay.requestLayout()
                 isCheckEditCard = !isCheckEditCard
+
+                val allViews = getViews(scrollLay) as List<LinearLayout>
+                allViews.drop(allViews.lastIndex)
+                var inter = 0
+                for (i in allViews) {
+                    for (j in allViews[inter]) {
+                        ((j as ConstraintLayout).getChildAt(j.childCount - 1) as ImageView).visibility =
+                            View.VISIBLE
+                    }
+                    inter++
+                }
 
             } else { // Если нету места создать новую
 
@@ -455,22 +418,24 @@ class MainActivity : AppCompatActivity() {
                 .scaleX(0.9f)
                 .alpha(0.5f)
                 .setDuration(100)
-                .withEndAction { Runnable {
+                .withEndAction {
+                    Runnable {
 
-                    editCardLay.setBackgroundResource(R.drawable.xml_card_uncheck)
-                    editCardText.setTextColor(Color.parseColor("#749FFB"))
-                    editCardImg.setImageResource(R.drawable.ico_edit)
+                        editCardLay.setBackgroundResource(R.drawable.xml_card_uncheck)
+                        editCardText.setTextColor(Color.parseColor("#749FFB"))
+                        editCardImg.setImageResource(R.drawable.ico_edit)
 
-                    editCardLay.animate()
-                        .scaleY(1f)
-                        .scaleX(1f)
-                        .alpha(1f)
-                        .setDuration(100)
-                        .start()
-                }.run() }
+                        editCardLay.animate()
+                            .scaleY(1f)
+                            .scaleX(1f)
+                            .alpha(1f)
+                            .setDuration(100)
+                            .start()
+                    }.run()
+                }
                 .start()
 
-            val cardLay = lastLayout.getChildAt(lastLayout.childCount-1)
+            val cardLay = lastLayout.getChildAt(lastLayout.childCount - 1)
 
             if (lastLayout.childCount == 1) {
 
@@ -478,178 +443,55 @@ class MainActivity : AppCompatActivity() {
                     .translationX(-150.dpToPx.toFloat())
                     .alpha(0f)
                     .setDuration(200)
-                    .withEndAction { Runnable {
-                        scrollLay.removeView(lastLayout)
-                    }.run() }
+                    .withEndAction {
+                        Runnable {
+                            scrollLay.removeView(lastLayout)
+                        }.run()
+                    }
                     .start()
             } else {
                 cardLay.animate()
                     .translationX(150.dpToPx.toFloat())
                     .alpha(0f)
                     .setDuration(200)
-                    .withEndAction { Runnable {
-                        scrollLay.removeView(lastLayout)
-                    }.run() }
+                    .withEndAction {
+                        Runnable {
+                            scrollLay.removeView(lastLayout)
+                        }.run()
+                    }
                     .start()
             }
 
             scrollLay.requestLayout()
             isCheckEditCard = !isCheckEditCard
-        }
-    }
 
-    private fun showcreateCard() {
-
-        createCardLay.visibility = ConstraintLayout.VISIBLE
-
-        createCardLay.animate()
-            .translationY(0f)
-            .setDuration(500)
-            .withEndAction { Runnable {
-                hideshowCards(true)
-            }.run() }
-            .start()
-
-        backButton.setOnClickListener {
-
-            hideshowCards(false)
-
-            createCardLay.animate()
-                .translationY(900.dpToPx.toFloat())
-                .setDuration(500)
-                .withEndAction { Runnable {
-                    createCardLay.visibility = ConstraintLayout.INVISIBLE
-                }.run() }
-                .start()
-
-        }
-
-        chooseBackCard.setOnClickListener {
-
-            selectImageIntent.launch("image/*")
-            nameCardText.text = cardNameEdit.text.toString()
-
-        }
-
-        changeTimerButton.setOnClickListener {
-            val cal = Calendar.getInstance()
-            val timeSetListener = TimePickerDialog.OnTimeSetListener { timePicker, hour, minute ->
-                cal.set(Calendar.HOUR_OF_DAY, hour)
-                cal.set(Calendar.MINUTE, minute)
-                timerTextChange.text = SimpleDateFormat("HH:mm").format(cal.time)
+            val allViews = getViews(scrollLay) as List<LinearLayout>
+            allViews.drop(allViews.lastIndex)
+            var inter = 0
+            for (i in allViews) {
+                for (j in allViews[inter]) {
+                    ((j as ConstraintLayout).getChildAt(j.childCount - 1) as ImageView).visibility =
+                        View.INVISIBLE
+                }
+                inter++
             }
-            nameCardText.text = cardNameEdit.text.toString()
-            TimePickerDialog(this, timeSetListener, cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), true).show()
+
         }
-
-
-        saveButton.setOnClickListener {
-            if (uriImage.isNotEmpty() && cardNameEdit.text.toString().trim().isNotEmpty()) {
-
-                // write file
-
-                addCardToDB(
-                    createDirectoryAndSaveFile(uriToBitmap(Uri.parse(uriImage))!!, cardNameEdit.text.toString()).toString(),
-                    cardNameEdit.text.toString(),
-                    timerTextChange.text.toString() + ":00"
-                )
-            } else {
-                Toast.makeText(this, "You have not selected a image or choose name", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    private fun uriToBitmap(selectedFileUri: Uri): Bitmap? {
-        try {
-            val parcelFileDescriptor = contentResolver.openFileDescriptor(selectedFileUri, "r")
-            val fileDescriptor: FileDescriptor = parcelFileDescriptor!!.fileDescriptor
-            val image = BitmapFactory.decodeFileDescriptor(fileDescriptor)
-            parcelFileDescriptor.close()
-            return image
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return null
-    }
-
-    private fun createDirectoryAndSaveFile(imageToSave: Bitmap, fileName: String): Uri {
-        val direct = File(filesDir.absolutePath + "/MeditAction")
-        if (!direct.exists()) {
-            val wallpaperDirectory = File(filesDir.absolutePath + "/MeditAction/")
-            wallpaperDirectory.mkdirs()
-        }
-        val file = File(filesDir.absolutePath + "/MeditAction/", fileName)
-        if (file.exists()) {
-            file.delete()
-        }
-        try {
-            val out = FileOutputStream(file)
-            imageToSave.compress(Bitmap.CompressFormat.PNG, 100, out)
-            out.flush()
-            out.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return Uri.fromFile(file)
-    }
-
-    private fun addCardToDB(cardImg: String, titleText: String, timer: String?) {
-
-        Observable.fromCallable {
-
-            // main
-            val db = AppDatabase.getAppDatabase(applicationContext)
-
-            cardDao = db!!.cardDao() // Я СДЕЛАЛ ЭТУ ХУЙНЮ!!!!!!!!!!!
-
-            cardDao.insertCard(Card(0, titleText, cardImg, timer!!))
-
-
-        }.doOnError { Log.e("ERROR", it.message.toString()) }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnComplete {
-                Log.e("LOGG", cardImg)
-                hideshowCards(false)
-                isCheckEditCard = true
-                addCard()
-                createCardLay.animate()
-                    .translationY(900.dpToPx.toFloat())
-                    .setDuration(500)
-                    .withEndAction { Runnable {
-                        createCardLay.visibility = ConstraintLayout.INVISIBLE
-                    }.run() }
-                    .start()
-                clearLayout()
-                showCards()
-
-                // clear lay
-                uriImage = ""
-                nameCardText.text = ""
-                timerTextChange.text = ""
-
-            }
-            .subscribe()
     }
 
     private fun clearLayout() {
-        scrollLay.removeViews(1, scrollLay.childCount-1)
+        scrollLay.removeViews(1, scrollLay.childCount - 1)
         (scrollLay.getChildAt(0) as LinearLayout).removeAllViews()
+        showCards()
     }
 
-    private fun hideshowCards(isHide: Boolean) {
-        if (isHide) {
-            scrollLay.visibility = View.INVISIBLE
-            editCardLay.visibility = View.INVISIBLE
-            musicLay.visibility = View.INVISIBLE
-        } else {
-            scrollLay.visibility = View.VISIBLE
-            editCardLay.visibility = View.VISIBLE
-            musicLay.visibility = View.VISIBLE
-        }
-    }
-
-    private fun createCard(id: Int, cardImg: Int = 0, titleText: String?, timer: String?, cardImgUri: String = "") {
+    private fun createCard(
+        id: Int,
+        cardImg: Int = 0,
+        titleText: String?,
+        timer: String?,
+        cardImgUri: String = ""
+    ) {
 
         val lastLayout: LinearLayout = getViews(scrollLay).last() as LinearLayout
 
@@ -672,42 +514,41 @@ class MainActivity : AppCompatActivity() {
             (sampleCard.layoutParams as LinearLayout.LayoutParams).width = 160.dpToPx
             (sampleCard.layoutParams as LinearLayout.LayoutParams).height = 130.dpToPx
             (sampleCard.layoutParams as LinearLayout.LayoutParams).weight = 1f
-            (sampleCard.layoutParams as LinearLayout.LayoutParams).leftMargin =  8.dpToPx
+            (sampleCard.layoutParams as LinearLayout.LayoutParams).leftMargin = 8.dpToPx
             (sampleCard.layoutParams as LinearLayout.LayoutParams).rightMargin = 8.dpToPx
             lastLayout.requestLayout()
 
             // OnClick Linstener
-            sampleCard.setOnClickListener {
 
-                intent = Intent(this, MeditationActivity::class.java)
-                intent.putExtra("id", id)
-
-                startActivity(intent)
-                overridePendingTransition(androidx.appcompat.R.anim.abc_fade_in, androidx.appcompat.R.anim.abc_fade_out)
-            }
-            
-            
             // Image Background on card
             val backgroundCard = ImageView(this)
-
             backgroundCard.id = ImageView.generateViewId()
 
             // Rounded corners and CenterCrop image, background image for card
             val multi = MultiTransformation(
                 CenterCrop(),
-                RoundedCornersTransformation(16.dpToPx, 0, RoundedCornersTransformation.CornerType.ALL)
+                RoundedCornersTransformation(
+                    16.dpToPx,
+                    0,
+                    RoundedCornersTransformation.CornerType.ALL
+                )
             )
 
             Glide.with(this).load(cardImg)
                 .apply(RequestOptions.bitmapTransform(multi))
+                .apply(RequestOptions.skipMemoryCacheOf(true))
+                .apply(RequestOptions.diskCacheStrategyOf(DiskCacheStrategy.NONE))
                 .error(Uri.parse(cardImgUri))
                 .into(backgroundCard)
-            
-            sampleCard.addView(backgroundCard, ConstraintLayout.LayoutParams.MATCH_PARENT, ConstraintLayout.LayoutParams.MATCH_PARENT)
+
+            sampleCard.addView(
+                backgroundCard,
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.MATCH_PARENT
+            )
 
             // Create Title Card
             val titleCard = ConstraintLayout(this)
-
             titleCard.id = ConstraintLayout.generateViewId()
 
             // Set transparency background color
@@ -734,7 +575,7 @@ class MainActivity : AppCompatActivity() {
             textTitle.id = TextView.generateViewId()
             textTitle.textSize = 20f
             textTitle.typeface = ResourcesCompat.getFont(this, R.font.kumbh_sans_regular)
-            textTitle.setTextColor(Color.rgb(255,255,255))
+            textTitle.setTextColor(Color.rgb(255, 255, 255))
             textTitle.text = titleText!!
 
             titleCard.addView(textTitle)
@@ -760,6 +601,57 @@ class MainActivity : AppCompatActivity() {
             )
             constraintSetText.applyTo(titleCard)
 
+
+            // EditCard
+
+            val editCard = ImageView(this)
+            editCard.id = ImageView.generateViewId()
+            editCard.setImageResource(R.drawable.ico_edit2)
+            editCard.visibility = View.INVISIBLE
+            sampleCard.addView(editCard, 50.dpToPx, 50.dpToPx)
+
+            val constraintSetEdit = ConstraintSet()
+            constraintSetEdit.clone(sampleCard)
+            constraintSetEdit.connect(
+                editCard.id, ConstraintSet.TOP,
+                sampleCard.id, ConstraintSet.TOP
+            )
+            constraintSetEdit.connect(
+                editCard.id, ConstraintSet.BOTTOM,
+                sampleCard.id, ConstraintSet.BOTTOM
+            )
+            constraintSetEdit.connect(
+                editCard.id, ConstraintSet.LEFT,
+                sampleCard.id, ConstraintSet.LEFT
+            )
+            constraintSetEdit.connect(
+                editCard.id, ConstraintSet.RIGHT,
+                sampleCard.id, ConstraintSet.RIGHT
+            )
+            constraintSetEdit.applyTo(sampleCard)
+
+            // OnClick
+            sampleCard.setOnClickListener {
+
+                if (!isCheckEditCard) {
+
+                    intent = Intent(this, MeditationActivity::class.java)
+                    intent.putExtra("id", id)
+
+                    startActivity(intent)
+                    overridePendingTransition(
+                        androidx.appcompat.R.anim.abc_fade_in,
+                        androidx.appcompat.R.anim.abc_fade_out
+                    )
+
+                } else {
+                    // todo editCard
+                    editCard(id)
+
+                }
+            }
+
+
             if (lastLayout.childCount == 1) {
                 sampleCard.translationX = -150.dpToPx.toFloat()
                 sampleCard.animate()
@@ -776,6 +668,7 @@ class MainActivity : AppCompatActivity() {
                     .start()
             }
 
+
             scrollLay.requestLayout()
 
         } else { // Если нету места создать новую
@@ -783,13 +676,31 @@ class MainActivity : AppCompatActivity() {
             // Создаем Layout для хранения карточек
             val cardsLayout = LinearLayout(this)
 
-            scrollLay.addView(cardsLayout, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            scrollLay.addView(
+                cardsLayout,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
             (cardsLayout.layoutParams as LinearLayout.LayoutParams).topMargin = 12.dpToPx
 
             // Restart function
             createCard(id, cardImg, titleText, timer, cardImgUri)
         }
 
+    }
+
+    private fun editCard(id: Int) {
+        supportFragmentManager.beginTransaction()
+            .setCustomAnimations(
+                androidx.appcompat.R.anim.abc_slide_in_bottom,
+                androidx.appcompat.R.anim.abc_slide_out_bottom
+            )
+            .replace(R.id.fragmentCreateCard, CardCreateFragment())
+            .commit()
+        intent = Intent(this, CardCreateFragment::class.java)
+        intent.putExtra("ID", id)
+
+        editCardLay.callOnClick()
     }
 
     private fun getViews(layout: ViewGroup): List<View> {
@@ -799,7 +710,5 @@ class MainActivity : AppCompatActivity() {
         }
         return views
     }
-
-
 
 }

@@ -72,8 +72,7 @@ abstract class AppDatabase: RoomDatabase() {
                                     )
                                 )
 
-                            }.doOnError({ Log.e("ERROR", it.message.toString())})
-                                .subscribeOn(Schedulers.io())
+                            }.subscribeOn(Schedulers.io())
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe()
 

@@ -22,6 +22,9 @@ interface CardDAO {
     @Query("SELECT * FROM Statistic")
     fun getStats(): List<Statistic>
 
+    @Query("SELECT * FROM Card WHERE id=:id")
+    fun getCardById(id: Int): Card
+
 
     // Insert
 

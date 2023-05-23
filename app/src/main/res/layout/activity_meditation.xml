@@ -5,7 +5,6 @@
     android:id="@+id/contentLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/img_back_meditation"
     tools:context=".MeditationActivity">
 
     <ProgressBar
@@ -13,7 +12,7 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="180dp"
         android:layout_height="180dp"
-        android:alpha="0.85"
+        android:alpha="0.6"
         android:max="100"
         android:progress="70"
         android:progressDrawable="@drawable/xml_progressbar"
@@ -27,8 +26,7 @@
         android:id="@+id/timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="@font/itimcyrillic"
-        android:shadowDy="0"
+        android:fontFamily="@font/overload_burn"
         android:text="12:52"
         android:textColor="#FFFFFF"
         android:textSize="34sp"
@@ -46,54 +44,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/ico_arrow" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/musicContainer"
-        android:layout_width="0dp"
-        android:layout_height="40dp"
-        android:background="@drawable/xml_music_bar_corners"
-        android:backgroundTint="#7E000000"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
-
-        <TextView
-            android:id="@+id/musicText"
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:fontFamily="@font/kumbh_sans_regular"
-            android:letterSpacing="0.1"
-            android:text="Games - Tessa Voilet"
-            android:textAlignment="center"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/nextTrack"
-            android:layout_width="28dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="8dp"
-            android:paddingHorizontal="5dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/musicText"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ico_next" />
-
-        <ImageView
-            android:id="@+id/backTrack"
-            android:layout_width="28dp"
-            android:layout_height="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingHorizontal="5dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/musicText"
-            app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ico_back" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/titileMeditationText"
