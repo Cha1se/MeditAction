@@ -117,9 +117,78 @@ class MainActivity : AppCompatActivity() {
         }
 
         changeWelcomeText()
-        showCards()
-        showCounterSession()
+        onFirstStartShowDeaflultCards()
     }
+
+    fun onFirstStartShowDeaflultCards() {
+        val isFirstRun = getSharedPreferences("PREFERENCE", MODE_PRIVATE)
+            .getBoolean("isFirstRun", true)
+
+        if (isFirstRun) {
+            addDeafultCardsToDB()
+        } else {
+            showCards()
+            showCounterSession()
+        }
+
+        getSharedPreferences("PREFERENCE", MODE_PRIVATE).edit()
+            .putBoolean("isFirstRun", false).commit()
+    }
+
+    fun addDeafultCardsToDB() {
+        Observable.fromCallable {
+
+            var db = AppDatabase.getAppDatabase(applicationContext)
+
+            var cardDao = db!!.cardDao()
+
+            cardDao.insertStatistic(Statistic(id = 0, counter = 0, streak = 0, lastDayOfUse = "none"))
+
+            cardDao.insertCard(
+                Card(
+                    id = 0,
+                    background = "img_back_meditation",
+                    cardName = "Relax",
+                    timer = "00:15:00"
+                )
+            )
+
+            cardDao.insertCard(
+                Card(
+                    id = 0,
+                    background = "img_sleep_sample_card",
+                    cardName = "Sleep",
+                    timer = "00:30:00"
+                )
+            )
+
+            cardDao.insertCard(
+                Card(
+                    id = 0,
+                    background = "img_stress_sample_card",
+                    cardName = "Stress",
+                    timer = "00:20:00"
+                )
+            )
+
+            cardDao.insertCard(
+                Card(
+                    id = 0,
+                    background = "img_timer_sample_card",
+                    cardName = "Timer",
+                    timer = "00:20:00"
+                )
+            )
+
+        }.subscribeOn(Schedulers.io())
+            .doOnComplete {
+                showCards()
+                showCounterSession()
+            }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe()
+    }
+
 
     private fun changeWelcomeText() {
         val dateFormat =
@@ -149,10 +218,6 @@ class MainActivity : AppCompatActivity() {
             val db = AppDatabase.getAppDatabase(applicationContext)
 
             cardDao = db!!.cardDao()
-
-            while (cardDao.getStats().isEmpty()) {
-
-            }
 
             stats = cardDao.getStats().last()
 
@@ -213,6 +278,8 @@ class MainActivity : AppCompatActivity() {
             .subscribe()
     }
 
+
+
     private fun showCards() {
 
         var img: Int?
@@ -223,19 +290,9 @@ class MainActivity : AppCompatActivity() {
 
         Observable.fromCallable {
 
-            // main
             val db = AppDatabase.getAppDatabase(applicationContext)
-
             cardDao = db!!.cardDao()
-
-            // Add cards in database and update / delete
-
-            // put values in database
-
             cards = cardDao.getCards()
-//            while (cards.size < 4) {
-//                cards = cardDao.getCards()
-//            }
 
         }.doOnError { Log.e("ERROR", it.message.toString()) }
             .subscribeOn(Schedulers.io())
